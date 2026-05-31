@@ -2,24 +2,28 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>魔法少女のダンジョン探索</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body {
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
   background: #0a0a1a;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+body {
   color: #e0e0ff;
   font-family: 'Courier New', monospace;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  overflow: hidden;
+  position: relative;
 }
 #game-container {
   width: 800px;
   height: 600px;
-  position: relative;
+  position: fixed;
+  transform-origin: top left;
   background: #0d0d20;
   border: 2px solid #4040a0;
   box-shadow: 0 0 30px #2020a0, inset 0 0 30px rgba(20,20,60,0.5);
@@ -436,6 +440,94 @@ body {
   pointer-events: none;
 }
 
+/* タッチ端末では内蔵Dパッドを非表示（外部コントロール使用） */
+@media (any-pointer: coarse) {
+  #dpad-overlay { display: none !important; }
+}
+
+/* ===== MOBILE CONTROLS ===== */
+#mobile-controls {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  display: none;
+  align-items: center;
+  justify-content: space-around;
+  padding: 8px 16px env(safe-area-inset-bottom, 8px);
+  background: linear-gradient(180deg, rgba(5,5,16,0.97), rgba(8,8,24,0.99));
+  border-top: 1px solid #3030a0;
+  z-index: 500;
+  gap: 12px;
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  /* 横画面小型端末: 右側フローティング */
+  #mobile-controls {
+    top: 0; bottom: 0; right: 0; left: auto;
+    width: 185px;
+    flex-direction: column;
+    border-top: none;
+    border-left: 1px solid #3030a0;
+    padding: 12px 8px;
+  }
+}
+#mob-dpad {
+  display: grid;
+  grid-template-columns: repeat(3, 58px);
+  grid-template-rows: repeat(3, 58px);
+  gap: 5px;
+  flex-shrink: 0;
+}
+.mob-btn {
+  background: linear-gradient(135deg, #1a1040, #0d0820);
+  border: 2px solid #4040a0;
+  color: #c0a0ff;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: background 0.07s;
+  -webkit-tap-highlight-color: transparent;
+}
+.mob-btn:active {
+  background: linear-gradient(135deg, #3a2a80, #2a1a60);
+  box-shadow: 0 0 12px #6060ff;
+  transform: scale(0.88);
+}
+.mob-center-cell {
+  background: rgba(15,10,40,0.6);
+  border: 1px solid #2020a0;
+  border-radius: 8px;
+}
+.mob-empty-cell { background: transparent; }
+#mob-action-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.mob-action-btn {
+  background: linear-gradient(135deg, #2a1a5a, #1a0a3a);
+  border: 1px solid #6060a0;
+  color: #c0a0ff;
+  padding: 12px 18px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 8px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  min-width: 80px;
+  text-align: center;
+}
+.mob-action-btn:active {
+  background: linear-gradient(135deg, #4a2a9a, #3a1a7a);
+  box-shadow: 0 0 8px #8060ff;
+}
+
 /* ===== GLOBAL ===== */
 .pixel-font { image-rendering: pixelated; }
 .screen-particles {
@@ -588,6 +680,25 @@ body {
   <button class="menu-btn" onclick="showTitle()">タイトルへ戻る</button>
 </div>
 
+</div><!-- /game-container -->
+
+<!-- MOBILE CONTROLS (outside game, always native size) -->
+<div id="mobile-controls">
+  <div id="mob-dpad">
+    <div class="mob-empty-cell"></div>
+    <button class="mob-btn" onpointerdown="dpadPress('ArrowUp')"    onpointerup="dpadRelease('dpad-up')"    onpointercancel="dpadRelease('dpad-up')">▲</button>
+    <div class="mob-empty-cell"></div>
+    <button class="mob-btn" onpointerdown="dpadPress('ArrowLeft')"  onpointerup="dpadRelease('dpad-left')"  onpointercancel="dpadRelease('dpad-left')">◀</button>
+    <div class="mob-center-cell"></div>
+    <button class="mob-btn" onpointerdown="dpadPress('ArrowRight')" onpointerup="dpadRelease('dpad-right')" onpointercancel="dpadRelease('dpad-right')">▶</button>
+    <div class="mob-empty-cell"></div>
+    <button class="mob-btn" onpointerdown="dpadPress('ArrowDown')"  onpointerup="dpadRelease('dpad-down')"  onpointercancel="dpadRelease('dpad-down')">▼</button>
+    <div class="mob-empty-cell"></div>
+  </div>
+  <div id="mob-action-bar">
+    <button class="mob-action-btn" onclick="saveGame()">💾 SAVE</button>
+    <button class="mob-action-btn" onclick="toggleMute()">🔊 MUTE</button>
+  </div>
 </div>
 
 <script>
@@ -999,6 +1110,7 @@ function showTitle() {
   drawTitleSprite();
   generateStars();
   startBGM('title');
+  setMobileControls(false);
 }
 
 function showExplore() {
@@ -1009,6 +1121,7 @@ function showExplore() {
   drawHudSprite();
   startAnimLoop();
   startBGM('floor' + (game.currentFloor + 1));
+  setMobileControls(true);
 }
 
 function showBattle(enemyData) {
@@ -1028,6 +1141,7 @@ function showBattle(enemyData) {
   addLog(`${enemyData.name}が現れた！`, 'info');
   playSound('battle');
   startBGM('battle');
+  setMobileControls(false);
 }
 
 function hideAll() {
@@ -1221,16 +1335,6 @@ function renderBattle() {
 // ============================================================
 // PLAYER MOVEMENT
 // ============================================================
-document.addEventListener('keydown', e => {
-  if(game?.state === 'explore') {
-    if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) stopAutoWalk();
-    handleMove(e.key);
-  }
-  if(game?.state === 'levelup' && (e.key==='Enter'||e.key===' ')) dismissLevelUp();
-  if(e.key.toLowerCase() === 's' && game?.state === 'explore') saveGame();
-  if(e.key.toLowerCase() === 'm') toggleMute();
-});
-
 function handleMove(key) {
   const dirs = { ArrowUp:[0,-1], ArrowDown:[0,1], ArrowLeft:[-1,0], ArrowRight:[1,0] };
   const d = dirs[key];
@@ -1455,6 +1559,7 @@ function cmdRun() {
       document.getElementById('explore-screen').style.display = 'flex';
       game.battle = null;
       startBGM('floor' + (game.currentFloor + 1));
+      setMobileControls(true);
     }, 600);
   } else {
     addLog('逃げられなかった！', 'enemy');
@@ -1513,6 +1618,7 @@ function battleWin() {
     game.state = 'explore';
     game.battle = null;
     startBGM('floor' + (game.currentFloor + 1));
+    setMobileControls(true);
     drawHud();
     if(allClear) {
       const msg = game.currentFloor < 4
@@ -1649,6 +1755,7 @@ function dismissLevelUp() {
   game.battle = null;
   setBattleLock(false);
   startBGM('floor' + (game.currentFloor + 1));
+  setMobileControls(true);
   if(allClear) {
     const msg = game.currentFloor < 4
       ? '★ 全敵撃破！階段を探して次のフロアへ！'
@@ -1901,6 +2008,61 @@ function toggleMute() {
 }
 
 // ============================================================
+// SCREEN SCALING (mobile responsive)
+// ============================================================
+function isTouchDevice() {
+  return navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
+}
+
+function fitToScreen() {
+  const container = document.getElementById('game-container');
+  const controls  = document.getElementById('mobile-controls');
+  const W = 800, H = 600;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const isPortrait = vh > vw;
+  const isLandscapeSmall = !isPortrait && vh < 500;
+  const touch = isTouchDevice();
+
+  // Reserve space for mobile controls
+  let reserveW = 0, reserveH = 0;
+  if(touch) {
+    if(isLandscapeSmall) reserveW = 185; // right panel
+    else                 reserveH = Math.min(Math.floor(vh * 0.28), 210); // bottom bar
+  }
+
+  const availW = vw - reserveW;
+  const availH = vh - reserveH;
+  const scale  = Math.min(availW / W, availH / H);
+
+  const scaledW = W * scale;
+  const scaledH = H * scale;
+  const left = Math.floor((availW - scaledW) / 2);
+  const top  = Math.floor((availH - scaledH) / 2);
+
+  container.style.left      = `${left}px`;
+  container.style.top       = `${Math.max(0, top)}px`;
+  container.style.transform = `scale(${scale})`;
+
+  // Show/hide mobile controls (handled per-screen in showXxx functions)
+  if(!touch) {
+    controls.style.display = 'none';
+  } else if(isLandscapeSmall) {
+    controls.style.height = 'auto';
+    controls.style.width  = `${reserveW}px`;
+  } else {
+    controls.style.height = `${reserveH}px`;
+    controls.style.width  = '';
+  }
+}
+
+function setMobileControls(visible) {
+  const el = document.getElementById('mobile-controls');
+  if(!el || !isTouchDevice()) return;
+  el.style.display = visible ? 'flex' : 'none';
+}
+
+// ============================================================
 // PATHFINDING + AUTO-WALK
 // ============================================================
 let autoWalkPath  = [];
@@ -2037,10 +2199,22 @@ function moveTowardClick(clickX, clickY) {
 // ============================================================
 // INIT
 // ============================================================
+fitToScreen();
 showTitle();
 startAnimLoop();
+
+window.addEventListener('resize', fitToScreen);
+window.addEventListener('orientationchange', () => setTimeout(fitToScreen, 200));
+
 document.addEventListener('keydown', e => {
   if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+  if(game?.state === 'explore') {
+    if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) stopAutoWalk();
+    handleMove(e.key);
+  }
+  if(game?.state === 'levelup' && (e.key==='Enter'||e.key===' ')) dismissLevelUp();
+  if(e.key.toLowerCase() === 's' && game?.state === 'explore') saveGame();
+  if(e.key.toLowerCase() === 'm') toggleMute();
 });
 </script>
 </body>
